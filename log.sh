@@ -85,7 +85,7 @@ function logs {
   local trace=`caller 1 | sed -E 's/^.+?\s([_a-z0-9]+)\s([-/.a-z0-9]+)$/\2#\1/I'`
   local payload
 
-  if [[ "$3" = "-" ]]; then
+  if [[ "${3:-}" = "-" ]]; then
     payload=$( cat - )
 
     IFS=$'\n'
