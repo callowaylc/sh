@@ -83,8 +83,17 @@ function logs {
   local message=${2}
   local sevnum=`severity $level`
   local trace=`caller 1 | sed -E 's/^.+?\s([_a-z0-9]+)\s([-/.a-z0-9]+)$/\2#\1/I'`
+  local payload
 
-  set -- \
+  if [[ "$3" = "-" ]]; then
+    payload=$( cat - )
+
+    IFS=$'\n'
+    set -- $level $message `printf '%s ' "$payload"`
+    IFS=
+  fi
+
+  printf '"%s"\n' \
     "timestamp=`date +%s%N | cut -b1-13`" \
     "level=$level" \
     "priority=$sevnum" \
@@ -92,17 +101,14 @@ function logs {
     "message_id=`uuidgen`" \
     "trace=$trace" \
     "_pid=$$" \
-    "${@:3}"
-
-  printf '"%s"\n' "$@" \
-    | jq -crs '
-        .
-        | map(split("=")
-        | {(.[0]): .[1]}
-        | with_entries( .key |= ascii_upcase ))
-        | add
-      ' \
-    | >&3 tee >( syslog $level )
+    "${@:3}" \
+  | jq -crs '
+      map(split("=")
+      | {(.[0]): .[1]}
+      | with_entries( .key |= ascii_upcase ))
+      | add
+    ' \
+  | >&3 tee >( syslog $level )
 }
 export -f debug info warning error
 
@@ -132,3 +138,7 @@ function syslog {
     printf "$payload" | logger -p $level
   fi
 }
+
+## main #########################################
+
+log_open && alias log_open=":"
