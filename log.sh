@@ -94,8 +94,6 @@ function logs {
 
     if [[ -n "${payload-}" ]]; then
       set -- $level $message "${payload[@]:-}"
-      echo "$@"
-      exit
     else
       return
     fi
