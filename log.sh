@@ -92,10 +92,10 @@ function logs {
   elif [[ "${3:-}" = "-" ]]; then
     payload=(`cat -`)
 
-    if [[ -n "${payload-}" ]]; then
+    if [[ -n "${payload:-}" ]]; then
       set -- $level $message "${payload[@]:-}"
     else
-      return
+      return 3
     fi
   fi
 

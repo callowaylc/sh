@@ -13,9 +13,9 @@ SALT=A5d
 
 function sig {
   # obfuscates a given value by md5 encode
-  v="${1} ${SALT}"
+  v="${1:-}${SALT}"
 
-  printf $v | md5sum |  cut -d' ' -f1
+  printf "$v" | md5sum |  cut -d' ' -f1
 }
 export -f sig
 
