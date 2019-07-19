@@ -81,16 +81,24 @@ function error { logs "error" "$@" ;}
 function logs {
   local level=${1}
   local message=${2}
+
   local sevnum=`severity $level`
   local trace=`caller 1 | sed -E 's/^.+?\s([_a-z0-9]+)\s([-/.a-z0-9]+)$/\2#\1/I'`
   local payload
 
-  if [[ "${3:-}" = "-" ]]; then
-    payload=$( cat - )
+  if [[ "${2:-}" = "-" ]]; then
+    message="`cat -`"
 
-    IFS=$'\n'
-    set -- $level $message `printf '%s ' "$payload"`
-    IFS=
+  elif [[ "${3:-}" = "-" ]]; then
+    payload=(`cat -`)
+
+    if [[ -n "${payload-}" ]]; then
+      set -- $level $message "${payload[@]:-}"
+      echo "$@"
+      exit
+    else
+      return
+    fi
   fi
 
   printf '"%s"\n' \
