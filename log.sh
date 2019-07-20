@@ -73,6 +73,7 @@ function severity {
 
   echo $value
 }
+export -f severity
 
 function debug { logs "debug" "$@" ;}
 function info { logs "info" "$@" ;}
@@ -95,7 +96,7 @@ function logs {
     if [[ -n "${payload:-}" ]]; then
       set -- $level $message "${payload[@]:-}"
     else
-      return 3
+      echo "payload is empty" &>/dev/tty
     fi
   fi
 
@@ -114,9 +115,10 @@ function logs {
       | with_entries( .key |= ascii_upcase ))
       | add
     ' \
-  | >&3 tee >( syslog $level )
+  | tee /dev/fd/3 \
+  | syslog $level
 }
-export -f debug info warning error
+export -f debug info warning error logs
 
 function syslog {
   # forward logs to the available system log daemon; if
@@ -144,6 +146,7 @@ function syslog {
     printf "$payload" | logger -p $level
   fi
 }
+export -f syslog
 
 ## main #########################################
 
