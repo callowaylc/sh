@@ -91,16 +91,16 @@ function logs {
     message="`cat -`"
 
   elif [[ "${3:-}" = "-" ]]; then
-    payload=(`cat -`)
+    payload=( "`cat -`" )
 
     if [[ -n "${payload:-}" ]]; then
-      set -- $level $message "${payload[@]:-}"
-    else
-      echo "payload is empty" &>/dev/tty
+      set -- $level "$message" "${payload[@]:-}"
+
+    else return 0
     fi
   fi
 
-  printf '"%s"\n' \
+  printf '%s\n' \
     "timestamp=`date +%s%N | cut -b1-13`" \
     "level=$level" \
     "priority=$sevnum" \
@@ -109,10 +109,12 @@ function logs {
     "trace=$trace" \
     "_pid=$$" \
     "${@:3}" \
-  | jq -crs '
-      map(split("=")
-      | {(.[0]): .[1]}
-      | with_entries( .key |= ascii_upcase ))
+  | jq -crs --raw-input '
+      split("\n")[:-1] | map(
+        split("=")
+          | {(.[0]): .[1]}
+          | with_entries( .key |= ascii_upcase )
+      )
       | add
     ' \
   | tee /dev/fd/3 \
